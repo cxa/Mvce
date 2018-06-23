@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="14113" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="BYZ-38-t0r">
+    <device id="retina4_7" orientation="portrait">
+        <adaptation id="fullscreen"/>
+    </device>
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14088"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--View Controller-->
+        <scene sceneID="tne-QT-ifu">
+            <objects>
+                <viewController id="BYZ-38-t0r" customClass="ViewController" customModule="RandomImage" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="JDR-Hn-BSj">
+                                <rect key="frame" x="87" y="283" width="200" height="100"/>
+                                <subviews>
+                                    <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" style="gray" translatesAutoresizingMaskIntoConstraints="NO" id="TQl-28-kaM">
+                                        <rect key="frame" x="90" y="40" width="20" height="20"/>
+                                    </activityIndicatorView>
+                                    <progressView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="750" progress="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="sxq-ZW-HGS">
+                                        <rect key="frame" x="25" y="49" width="150" height="2"/>
+                                        <constraints>
+                                            <constraint firstAttribute="width" constant="150" id="Oon-Cx-DHf"/>
+                                        </constraints>
+                                    </progressView>
+                                    <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="x0R-xZ-I5Y">
+                                        <rect key="frame" x="0.0" y="0.0" width="200" height="100"/>
+                                    </imageView>
+                                </subviews>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <constraints>
+                                    <constraint firstAttribute="bottom" secondItem="x0R-xZ-I5Y" secondAttribute="bottom" id="1G5-0V-88z"/>
+                                    <constraint firstItem="x0R-xZ-I5Y" firstAttribute="leading" secondItem="JDR-Hn-BSj" secondAttribute="leading" id="1ww-dZ-qtS"/>
+                                    <constraint firstAttribute="trailing" secondItem="x0R-xZ-I5Y" secondAttribute="trailing" id="4fD-cc-CEy"/>
+                                    <constraint firstAttribute="width" constant="200" id="622-7V-zmW"/>
+                                    <constraint firstItem="TQl-28-kaM" firstAttribute="centerY" secondItem="JDR-Hn-BSj" secondAttribute="centerY" id="9AY-Lj-ew8"/>
+                                    <constraint firstItem="sxq-ZW-HGS" firstAttribute="centerX" secondItem="JDR-Hn-BSj" secondAttribute="centerX" id="B6R-aq-S1o"/>
+                                    <constraint firstItem="sxq-ZW-HGS" firstAttribute="centerY" secondItem="JDR-Hn-BSj" secondAttribute="centerY" id="CvA-od-k5g"/>
+                                    <constraint firstItem="x0R-xZ-I5Y" firstAttribute="top" secondItem="JDR-Hn-BSj" secondAttribute="top" id="DyI-VV-nad"/>
+                                    <constraint firstItem="TQl-28-kaM" firstAttribute="centerX" secondItem="JDR-Hn-BSj" secondAttribute="centerX" id="PgM-LE-HP9"/>
+                                    <constraint firstAttribute="height" constant="100" id="aGP-ED-blg"/>
+                                </constraints>
+                            </view>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="zhh-zy-5wF">
+                                <rect key="frame" x="128" y="391" width="118" height="30"/>
+                                <state key="normal" title="Download Button"/>
+                            </button>
+                        </subviews>
+                        <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <constraints>
+                            <constraint firstItem="JDR-Hn-BSj" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="GK0-Po-PSe"/>
+                            <constraint firstItem="zhh-zy-5wF" firstAttribute="centerX" secondItem="JDR-Hn-BSj" secondAttribute="centerX" id="MbV-Ie-LDo"/>
+                            <constraint firstItem="zhh-zy-5wF" firstAttribute="top" secondItem="JDR-Hn-BSj" secondAttribute="bottom" constant="8" symbolic="YES" id="PJA-jx-oq7"/>
+                            <constraint firstItem="JDR-Hn-BSj" firstAttribute="centerY" secondItem="8bC-Xf-vdC" secondAttribute="centerY" id="jMQ-Hv-VzR"/>
+                        </constraints>
+                        <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
+                    </view>
+                    <connections>
+                        <outlet property="downloadButton" destination="zhh-zy-5wF" id="o9K-jb-9qi"/>
+                        <outlet property="imageView" destination="x0R-xZ-I5Y" id="Oc2-FS-pLT"/>
+                        <outlet property="indicatorView" destination="TQl-28-kaM" id="AfP-mf-eui"/>
+                        <outlet property="progressBar" destination="sxq-ZW-HGS" id="o4U-Aw-U1p"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
+            </objects>
+        </scene>
+    </scenes>
+</document>
