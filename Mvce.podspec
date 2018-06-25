@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name                  = "Mvce"
-  s.version               = "1.0.0"
+  s.version               = "2.0.0"
   s.summary               = "A minimal, simple, unobtrusive, and event driven MVC library to glue decoupled Model, View, and Controller for UIKit/AppKit."
   s.homepage              = "https://github.com/cxa/Mvce"
   s.license               = "MIT"
