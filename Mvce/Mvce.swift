@@ -61,8 +61,9 @@ public extension EventEmitter where Self: AnyObject {
 public protocol Controller {
   associatedtype Model
   associatedtype Event
+  typealias Emitter = (Event) -> Void
 
-  func update(model: Model, for event: Event) -> Void
+  func update(model: Model, for event: Event, eventEmitter: @escaping Emitter) -> Void
 }
 
 public typealias Invalidator = () -> Void
@@ -73,7 +74,7 @@ public protocol View {
   typealias Emitter = (Event) -> Void
 
   func bind(model: Model) -> Invalidator
-  func bind(eventEmitter: Emitter) -> Void
+  func bind(eventEmitter: @escaping Emitter) -> Void
 }
 
 public struct Mvce {
@@ -155,10 +156,11 @@ private class EventLoop<Model, Event> {
     view.bind(eventEmitter: emit(event:))
     obsever = NotificationCenter.default.addObserver(forName: notiName, object: nil, queue: nil) { [weak self] notification in
       guard
+        let emitter = self?.emit(event:),
         let model = self?.model,
         let event = notification.object as? Box<Event>
       else { return }
-      controller.update(model: model, for: event.value)
+      controller.update(model: model, for: event.value, eventEmitter: emitter)
     }
   }
 
