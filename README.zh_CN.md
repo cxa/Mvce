@@ -41,13 +41,30 @@ struct CounterController: Controller {
   typealias Model = CounterModel
   typealias Event = CounterEvent
 
-  func update(model: CounterModel, for event: CounterEvent) {
+  func update(model: CounterModel, for event: CounterEvent, eventEmitter: @escaping (Event) -> Void) {
     switch event {
     case .increment:
       model.count += 1
     case .decrement:
       model.count -= 1
     }
+  }
+}
+
+// 按钮事件处理器
+class ButtonAction: NSObject {
+  let emit: (CounterEvent) -> Void
+
+  init(emit: @escaping (CounterEvent) -> Void) {
+    self.emit = emit
+  }
+
+  @objc func incr(_ sender: Any?) {
+    emit(.increment)
+  }
+
+  @objc func decr(_ sender: Any?) {
+    emit(.decrement)
   }
 }
 
@@ -62,22 +79,10 @@ final class ViewController: UIViewController {
     // 别忘了在这里组合模型、视图和控制器，别担心，Mvce 管理它们生命周期
     Mvce.glue(model: CounterModel(), view: self, controller: CounterController())
   }
-
-  @objc private func incr(_ sender: Any?) {
-    emit(event: .increment)
-  }
-
-  @objc private func decr(_ sender: Any?) {
-    emit(event: .decrement)
-  }
 }
 
 // 遵循 `View` 协议，绑定模型和事件发射器。
-// 如果要在 `bind(eventEmitter:)` 外用到事件发射器，
-// 则必须也遵循 `EventEmitter` 协议。
-//（唉，UIControl/NSControl 用的是 target-action 模式，
-// 无法通过函数参数的方式注入依赖）
-extension ViewController: View, EventEmitter {
+extension ViewController: View {
   typealias Model = CounterModel
   typealias Event = CounterEvent
 
@@ -87,9 +92,13 @@ extension ViewController: View, EventEmitter {
     ])
   }
 
-  func bind(eventEmitter: (CounterEvent) -> Void) {
-    incrButton.addTarget(self, action: #selector(incr(_:)), for: .touchUpInside)
-    decrButton.addTarget(self, action: #selector(decr(_:)), for: .touchUpInside)
+  func bind(eventEmitter: @escaping (CounterEvent) -> Void) {
+    let action = ButtonAction(emit: eventEmitter)
+    incrButton.addTarget(action, action: #selector(action.incr(_:)), for: .touchUpInside)
+    decrButton.addTarget(action, action: #selector(action.decr(_:)), for: .touchUpInside)
+    // 需 retain target
+    let key: StaticString = #function
+    objc_setAssociatedObject(self, key.utf8Start, action, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
   }
 }
 ```
@@ -113,10 +122,6 @@ public extension NSObjectProtocol where Self : NSObject {
 
 视图中也没有控制器的任何引用！`View` 协议除了要求绑定模型，还要求绑定事件发射器。何为事件发射器？只不过是一个 `(Event) -> Void` 的函数。用它来传送事件，Mvce 会分发给控制器，通知控制器更新模型。
 
-理想情况下，只需在 `bind(eventEmitter:)` 里使用事件发射器就好了，然后 UIKit/AppKit 的控件大都使用 target-action 模式，无法通过函数参数的方式将事件发射器注入。此时，只需额外遵循 `EventEmitter` 协议，就可以在 `bind(eventEmitter:)` 之外的地方使用 `emit(event:)` 来发送事件了。如果你使用支持闭包的控件（第三方），则遵循 `EventEmitter` 协议不是必须的。
-
-事件是 Mvce 的核心。事件可以来自用户在视图上的操作，也可以来自程序内部，比如网络请求，时间跳动等。需要使用内部事件时，也可以让控制器遵循 `EventEmitter` 协议，这样就可以在控制器里使用编程的方式发送事件。
-
 ### 组合模型、视图和控制器
 
 在 `UIViewController`/`NSViewController` 的 `loadView` or `viewDidLoad` 里使用 `Mvce.glue(model:view:controller:)` 来组合它们。Mvce 会管理它们的生命周期。
@@ -135,31 +140,27 @@ class ViewController: NSViewController {
     super.viewDidLoad()
     Mvce.glue(model: CounterModel(), view: self, controller: CounterController())
   }
-
-  @objc private func incr(_ sender: Any?) {
-    emit(event: .increment)
-  }
-
-  @objc private func decr(_ sender: Any?) {
-    emit(event: .decrement)
-  }
 }
 
-extension ViewController: View, EventEmitter {
+extension ViewController: View {
   typealias Model = CounterModel
   typealias Event = CounterEvent
 
   func bind(model: CounterModel) -> Invalidator {
     return Mvce.flatKVObservations([
       model.bind(\.count, to: label, at: \.stringValue) { String(format: "%d", $0) }
-      ])
+    ])
   }
 
-  func bind(eventEmitter: (CounterEvent) -> Void) {
-    incrButton.target = self
-    incrButton.action = #selector(incr(_:))
-    decrButton.target = self
-    decrButton.action = #selector(decr(_:))
+  func bind(eventEmitter: @escaping (CounterEvent) -> Void) {
+    let action = ButtonAction(emit: eventEmitter)
+    incrButton.target = action
+    incrButton.action = #selector(action.incr(_:))
+    decrButton.target = action
+    decrButton.action = #selector(action.decr(_:))
+    // 需 retain target
+    let key: StaticString = #function
+    objc_setAssociatedObject(self, key.utf8Start, action, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
   }
 }
 ```
@@ -167,6 +168,10 @@ extension ViewController: View, EventEmitter {
 ![macOS Sample App](Assets/macOSCounterApp.png)
 
 就这么多！[Example](Example) 目录下还有复杂点儿的例子，不妨看看。
+
+### `EventEmitter` 协议
+
+如果真的非常需要在 View 和 Controller 的任何角落里使用事件发射器，只需遵循让它们 `EventEmitter`。然而我不建议你这么做，这非常容易导致混乱的代码，破坏 MVC 的法则。
 
 ## 授权
 

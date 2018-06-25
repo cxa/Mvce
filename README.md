@@ -41,13 +41,30 @@ struct CounterController: Controller {
   typealias Model = CounterModel
   typealias Event = CounterEvent
 
-  func update(model: CounterModel, for event: CounterEvent) {
+  func update(model: CounterModel, for event: CounterEvent, eventEmitter: @escaping (Event) -> Void) {
     switch event {
     case .increment:
       model.count += 1
     case .decrement:
       model.count -= 1
     }
+  }
+}
+
+// For button actions
+class ButtonAction: NSObject {
+  let emit: (CounterEvent) -> Void
+
+  init(emit: @escaping (CounterEvent) -> Void) {
+    self.emit = emit
+  }
+
+  @objc func incr(_ sender: Any?) {
+    emit(.increment)
+  }
+
+  @objc func decr(_ sender: Any?) {
+    emit(.decrement)
   }
 }
 
@@ -63,22 +80,10 @@ final class ViewController: UIViewController {
     // And don't worry, lifetime is managed
     Mvce.glue(model: CounterModel(), view: self, controller: CounterController())
   }
-
-  @objc private func incr(_ sender: Any?) {
-    emit(event: .increment)
-  }
-
-  @objc private func decr(_ sender: Any?) {
-    emit(event: .decrement)
-  }
 }
 
 // Adopt `View` protocol to bind model and event emitter.
-// When event emitter is required outside `bind(eventEmitter:)`,
-// just adopt `EventEmitter`.
-// (curse the target-action pattern! You can pass nothing to the selector,
-// that say, no chance to inject dependency)
-extension ViewController: View, EventEmitter {
+extension ViewController: View {
   typealias Model = CounterModel
   typealias Event = CounterEvent
 
@@ -88,9 +93,13 @@ extension ViewController: View, EventEmitter {
     ])
   }
 
-  func bind(eventEmitter: (CounterEvent) -> Void) {
-    incrButton.addTarget(self, action: #selector(incr(_:)), for: .touchUpInside)
-    decrButton.addTarget(self, action: #selector(decr(_:)), for: .touchUpInside)
+  func bind(eventEmitter: @escaping (CounterEvent) -> Void) {
+    let action = ButtonAction(emit: eventEmitter)
+    incrButton.addTarget(action, action: #selector(action.incr(_:)), for: .touchUpInside)
+    decrButton.addTarget(action, action: #selector(action.decr(_:)), for: .touchUpInside)
+    // Hack to retain target
+    let key: StaticString = #function
+    objc_setAssociatedObject(self, key.utf8Start, action, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
   }
 }
 ```
@@ -114,10 +123,6 @@ Mvce manages the observation lifetime, once you return an invalidation closure `
 
 There is no any reference to controller inside view too! `View` protocol also requires you bind event emitter. What's an event emitter? Just a closure `(Event) -> Void`, you can use it to emit event, Mvce will dispatch event to controller and inform it to update model.
 
-Unfortunately, control elements in UIKit/AppKit use target-action pattern, we can't pass the event emitter to action selector. So adopting `EventEmitter` is required to use `emit(event:)` outside `bind(eventEmitter:)`. If you use 3rd library that uses closure for controls, adopting `EventEmitter` is not necessary.
-
-Event is essential part of Mvce. Event can be triggered by user from view, also can come from app itself, e.g. networking, clock tick etc.. In such cases, you can make controller confirming to `EventEmitter`, use `emit(event:)` to emit event inside controller programmatically.
-
 ### Glue Model, View, and Controller together
 
 Glue 'em all with `Mvce.glue(model:view:controller:)`, inject to `loadView` or `viewDidLoad` in `UIViewController`/`NSViewController`. And lifetime is managed by Mvce.
@@ -136,31 +141,27 @@ class ViewController: NSViewController {
     super.viewDidLoad()
     Mvce.glue(model: CounterModel(), view: self, controller: CounterController())
   }
-
-  @objc private func incr(_ sender: Any?) {
-    emit(event: .increment)
-  }
-
-  @objc private func decr(_ sender: Any?) {
-    emit(event: .decrement)
-  }
 }
 
-extension ViewController: View, EventEmitter {
+extension ViewController: View {
   typealias Model = CounterModel
   typealias Event = CounterEvent
 
   func bind(model: CounterModel) -> Invalidator {
     return Mvce.flatKVObservations([
       model.bind(\.count, to: label, at: \.stringValue) { String(format: "%d", $0) }
-      ])
+    ])
   }
 
-  func bind(eventEmitter: (CounterEvent) -> Void) {
-    incrButton.target = self
-    incrButton.action = #selector(incr(_:))
-    decrButton.target = self
-    decrButton.action = #selector(decr(_:))
+  func bind(eventEmitter: @escaping (CounterEvent) -> Void) {
+    let action = ButtonAction(emit: eventEmitter)
+    incrButton.target = action
+    incrButton.action = #selector(action.incr(_:))
+    decrButton.target = action
+    decrButton.action = #selector(action.decr(_:))
+    // hack to retain target
+    let key: StaticString = #function
+    objc_setAssociatedObject(self, key.utf8Start, action, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
   }
 }
 ```
@@ -168,6 +169,10 @@ extension ViewController: View, EventEmitter {
 ![macOS Sample App](Assets/macOSCounterApp.png)
 
 That's it! Remember to check out [Example](Example) directory for a more complex one.
+
+### `EventEmitter` protocol
+
+If you really, really need to access event emitter anywhere in View or Controller, just adopt `EventEmitter`. This's last resort, I don't recommend this way, it's easily to mess up code, violate MVC rules.
 
 ## License
 
