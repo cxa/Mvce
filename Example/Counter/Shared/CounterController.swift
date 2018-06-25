@@ -18,7 +18,7 @@ struct CounterController: Controller {
   typealias Model = CounterModel
   typealias Event = CounterEvent
 
-  func update(model: CounterModel, for event: CounterEvent) {
+  func update(model: CounterModel, for event: CounterEvent, eventEmitter: @escaping (Event) -> Void) {
     switch event {
     case .increment:
       model.count += 1

@@ -20,6 +20,8 @@
 		E051C02F20D81C44005CDE37 /* CounterModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E051C02D20D81C44005CDE37 /* CounterModel.swift */; };
 		E051C03120D81C53005CDE37 /* CounterController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E051C03020D81C53005CDE37 /* CounterController.swift */; };
 		E051C03220D81C53005CDE37 /* CounterController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E051C03020D81C53005CDE37 /* CounterController.swift */; };
+		E08AE8B720E14FB100C0C242 /* ButtonAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = E08AE8B620E14FB100C0C242 /* ButtonAction.swift */; };
+		E08AE8B820E14FB100C0C242 /* ButtonAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = E08AE8B620E14FB100C0C242 /* ButtonAction.swift */; };
 		E0EA515320DD49F400AEA939 /* Mvce.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E04913CB20DD482F004CA5B9 /* Mvce.framework */; };
 		E0EA515420DD49FC00AEA939 /* Mvce.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E04913CF20DD482F004CA5B9 /* Mvce.framework */; };
 /* End PBXBuildFile section */
@@ -66,6 +68,7 @@
 		E051C02820D81AED005CDE37 /* Counter_macOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Counter_macOS.entitlements; sourceTree = "<group>"; };
 		E051C02D20D81C44005CDE37 /* CounterModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CounterModel.swift; sourceTree = "<group>"; };
 		E051C03020D81C53005CDE37 /* CounterController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CounterController.swift; sourceTree = "<group>"; };
+		E08AE8B620E14FB100C0C242 /* ButtonAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ButtonAction.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -150,6 +153,7 @@
 			children = (
 				E051C02D20D81C44005CDE37 /* CounterModel.swift */,
 				E051C03020D81C53005CDE37 /* CounterController.swift */,
+				E08AE8B620E14FB100C0C242 /* ButtonAction.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -296,6 +300,7 @@
 				E051BFF720D81A6F005CDE37 /* AppDelegate.swift in Sources */,
 				E051C03120D81C53005CDE37 /* CounterController.swift in Sources */,
 				E051C02E20D81C44005CDE37 /* CounterModel.swift in Sources */,
+				E08AE8B720E14FB100C0C242 /* ButtonAction.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -307,6 +312,7 @@
 				E051C01F20D81AEC005CDE37 /* AppDelegate.swift in Sources */,
 				E051C03220D81C53005CDE37 /* CounterController.swift in Sources */,
 				E051C02F20D81C44005CDE37 /* CounterModel.swift in Sources */,
+				E08AE8B820E14FB100C0C242 /* ButtonAction.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

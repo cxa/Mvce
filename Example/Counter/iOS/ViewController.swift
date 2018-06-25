@@ -18,17 +18,9 @@ final class ViewController: UIViewController {
     super.viewDidLoad()
     Mvce.glue(model: CounterModel(), view: self, controller: CounterController())
   }
-
-  @objc private func incr(_ sender: Any?) {
-    emit(event: .increment)
-  }
-
-  @objc private func decr(_ sender: Any?) {
-    emit(event: .decrement)
-  }
 }
 
-extension ViewController: View, EventEmitter {
+extension ViewController: View {
   typealias Model = CounterModel
   typealias Event = CounterEvent
 
@@ -38,8 +30,12 @@ extension ViewController: View, EventEmitter {
     ])
   }
 
-  func bind(eventEmitter: (CounterEvent) -> Void) {
-    incrButton.addTarget(self, action: #selector(incr(_:)), for: .touchUpInside)
-    decrButton.addTarget(self, action: #selector(decr(_:)), for: .touchUpInside)
+  func bind(eventEmitter: @escaping (CounterEvent) -> Void) {
+    let action = ButtonAction(emit: eventEmitter)
+    incrButton.addTarget(action, action: #selector(action.incr(_:)), for: .touchUpInside)
+    decrButton.addTarget(action, action: #selector(action.decr(_:)), for: .touchUpInside)
+    // Need to retain target
+    let key: StaticString = #function
+    objc_setAssociatedObject(self, key.utf8Start, action, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
   }
 }

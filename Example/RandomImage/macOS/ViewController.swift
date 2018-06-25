@@ -10,9 +10,7 @@ import Cocoa
 import Mvce
 
 class ViewController: NSViewController {
-
   @IBOutlet weak var timerLabel: NSTextField!
-  @IBOutlet weak var timerLabel: UILabel!
   @IBOutlet weak var imageView: NSImageView!
   @IBOutlet weak var progresslessIndicator: NSProgressIndicator!
   @IBOutlet weak var progressIndicator: NSProgressIndicator!
@@ -27,10 +25,6 @@ class ViewController: NSViewController {
     let alert = NSAlert(error: error)
     alert.addButton(withTitle: NSLocalizedString("Dismiss", comment: ""))
     alert.beginSheetModal(for: view.window!, completionHandler: nil)
-  }
-
-  @objc private func handleDownload(_ sender: Any?) {
-    emit(event: .handleDownload)
   }
 }
 
@@ -54,8 +48,12 @@ extension ViewController: View, EventEmitter {
     ])
   }
 
-  func bind(eventEmitter: (ImageEvent) -> Void) {
-    downloadButton.target = self
-    downloadButton.action = #selector(handleDownload(_:))
+  func bind(eventEmitter: @escaping (ImageEvent) -> Void) {
+    let action = ButtonAction(emit: eventEmitter)
+    downloadButton.target = action
+    downloadButton.action = #selector(action.handleDownload(_:))
+    // Need to retain target
+    let key: StaticString = #function
+    objc_setAssociatedObject(self, key.utf8Start, action, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
   }
 }

@@ -22,6 +22,8 @@
 		E0707B7620D55E4E0054B059 /* ImageModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0707B7420D55E4E0054B059 /* ImageModel.swift */; };
 		E0707B7820D579BE0054B059 /* Platform.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0707B7720D579BE0054B059 /* Platform.swift */; };
 		E0707B7920D579BE0054B059 /* Platform.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0707B7720D579BE0054B059 /* Platform.swift */; };
+		E08AE8BE20E1516B00C0C242 /* ButtonAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = E08AE8BD20E1516B00C0C242 /* ButtonAction.swift */; };
+		E08AE8BF20E1516B00C0C242 /* ButtonAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = E08AE8BD20E1516B00C0C242 /* ButtonAction.swift */; };
 		E0EA516220DD83C600AEA939 /* Mvce.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E0EA515D20DD83BC00AEA939 /* Mvce.framework */; };
 		E0EA516320DD83CB00AEA939 /* Mvce.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E0EA516120DD83BC00AEA939 /* Mvce.framework */; };
 /* End PBXBuildFile section */
@@ -68,6 +70,7 @@
 		E0707B7120D55E370054B059 /* ImageController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageController.swift; sourceTree = "<group>"; };
 		E0707B7420D55E4E0054B059 /* ImageModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageModel.swift; sourceTree = "<group>"; };
 		E0707B7720D579BE0054B059 /* Platform.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Platform.swift; sourceTree = "<group>"; };
+		E08AE8BD20E1516B00C0C242 /* ButtonAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ButtonAction.swift; sourceTree = "<group>"; };
 		E0EA515620DD83BC00AEA939 /* Mvce.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Mvce.xcodeproj; path = ../../Mvce.xcodeproj; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -151,6 +154,7 @@
 				E0707B7720D579BE0054B059 /* Platform.swift */,
 				E0707B7420D55E4E0054B059 /* ImageModel.swift */,
 				E0707B7120D55E370054B059 /* ImageController.swift */,
+				E08AE8BD20E1516B00C0C242 /* ButtonAction.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -297,6 +301,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E0707B7820D579BE0054B059 /* Platform.swift in Sources */,
+				E08AE8BE20E1516B00C0C242 /* ButtonAction.swift in Sources */,
 				E0707B3F20D4C2610054B059 /* ViewController.swift in Sources */,
 				E0707B7220D55E370054B059 /* ImageController.swift in Sources */,
 				E0707B7520D55E4E0054B059 /* ImageModel.swift in Sources */,
@@ -309,6 +314,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E0707B7920D579BE0054B059 /* Platform.swift in Sources */,
+				E08AE8BF20E1516B00C0C242 /* ButtonAction.swift in Sources */,
 				E0707B6320D4C5D90054B059 /* ViewController.swift in Sources */,
 				E0707B7320D55E370054B059 /* ImageController.swift in Sources */,
 				E0707B7620D55E4E0054B059 /* ImageModel.swift in Sources */,

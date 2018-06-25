@@ -25,13 +25,9 @@ class ViewController: UIViewController {
     alert.addAction(UIAlertAction(title: NSLocalizedString("Dismiss", comment: ""), style: .cancel, handler: nil))
     present(alert, animated: true, completion: nil)
   }
-
-  @objc private func handleDownload(_ sender: Any?) {
-    emit(event: .handleDownload)
-  }
 }
 
-extension ViewController: View, EventEmitter {
+extension ViewController: View {
   typealias Model = ImageModel
   typealias Event = ImageEvent
 
@@ -51,7 +47,11 @@ extension ViewController: View, EventEmitter {
    ])
   }
 
-  func bind(eventEmitter: (ImageEvent) -> Void) {
-    downloadButton.addTarget(self, action: #selector(handleDownload(_:)), for: .touchUpInside)
+  func bind(eventEmitter: @escaping (ImageEvent) -> Void) {
+    let action = ButtonAction(emit: eventEmitter)
+    downloadButton.addTarget(action, action: #selector(action.handleDownload(_:)), for: .touchUpInside)
+    // Need to retain target
+    let key: StaticString = #function
+    objc_setAssociatedObject(self, key.utf8Start, action, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
   }
 }

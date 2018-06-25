@@ -15,21 +15,21 @@ enum ImageEvent {
   case cancelRequest
 }
 
-class ImageController: NSObject {
+class ImageController {
   private var downloadTask: URLSessionDataTask?
 }
 
-extension ImageController: Controller, EventEmitter {
+extension ImageController: Controller {
   typealias Model = ImageModel
   typealias Event = ImageEvent
 
-  func update(model: ImageModel, for event: ImageEvent) {
+  func update(model: ImageModel, for event: ImageEvent, eventEmitter: @escaping (ImageEvent) -> Void) {
     switch event {
     case .handleDownload:
       let next: ImageEvent
       if case .downloading(_) = model.imageState { next = .cancelRequest }
       else { next = .requestImage }
-      emit(event: next)
+      eventEmitter(next)
     case .requestImage:
       model.imageState = .downloading(.undetermined)
       downloadTask = downloadImage(model: model)
@@ -43,7 +43,7 @@ extension ImageController: Controller, EventEmitter {
 
 private extension ImageController {
   func downloadImage(model: ImageModel) -> URLSessionDataTask? {
-    guard let url = URL(string: "https://picsum.photos/2000/1000/?random") else {
+    guard let url = URL(string: "https://picsum.photos/2000/1000/?random") else { // Download a large image to show progress
       let uinfo = [NSLocalizedDescriptionKey: NSLocalizedString("Image URL is wrong", comment: "")]
       let err = NSError(domain: "", code: 0, userInfo:uinfo)
       model.imageState = .error(err)

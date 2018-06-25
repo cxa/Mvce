@@ -18,30 +18,26 @@ class ViewController: NSViewController {
     super.viewDidLoad()
     Mvce.glue(model: CounterModel(), view: self, controller: CounterController())
   }
-
-  @objc private func incr(_ sender: Any?) {
-    emit(event: .increment)
-  }
-
-  @objc private func decr(_ sender: Any?) {
-    emit(event: .decrement)
-  }
 }
 
-extension ViewController: View, EventEmitter {
+extension ViewController: View {
   typealias Model = CounterModel
   typealias Event = CounterEvent
 
   func bind(model: CounterModel) -> Invalidator {
     return Mvce.flatKVObservations([
       model.bind(\.count, to: label, at: \.stringValue) { String(format: "%d", $0) }
-      ])
+    ])
   }
 
-  func bind(eventEmitter: (CounterEvent) -> Void) {
-    incrButton.target = self
-    incrButton.action = #selector(incr(_:))
-    decrButton.target = self
-    decrButton.action = #selector(decr(_:))
+  func bind(eventEmitter: @escaping (CounterEvent) -> Void) {
+    let action = ButtonAction(emit: eventEmitter)
+    incrButton.target = action
+    incrButton.action = #selector(action.incr(_:))
+    decrButton.target = action
+    decrButton.action = #selector(action.decr(_:))
+    // Need to retain target
+    let key: StaticString = #function
+    objc_setAssociatedObject(self, key.utf8Start, action, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
   }
 }
