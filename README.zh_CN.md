@@ -169,9 +169,9 @@ extension ViewController: View {
 
 就这么多！[Example](Example) 目录下还有复杂点儿的例子，不妨看看。
 
-### `EventEmitter` 协议
+### `EventEmitter` 协议
 
-如果真的非常需要在 View 和 Controller 的任何角落里使用事件发射器，只需遵循让它们 `EventEmitter`。然而我不建议你这么做，这非常容易导致混乱的代码，破坏 MVC 的法则。
+如果真的非常需要在 View 和 Controller 的任何角落里使用事件发射器，只需遵循让它们 `EventEmitter`。然而我不建议你这么做，这非常容易导致混乱的代码，破坏 MVC 的法则。
 
 ## 授权
 
