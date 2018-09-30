@@ -26,7 +26,7 @@ extension ViewController: View {
 
   func bind(model: CounterModel) -> Invalidator {
     return Mvce.flatKVObservations([
-      model.bind(\.count, to: label, at: \.text) { String(format: "%d", $0) }
+      model.bind(\CounterModel.count, to: label, at: \UILabel.text) { String(format: "%d", $0) }
     ])
   }
 
