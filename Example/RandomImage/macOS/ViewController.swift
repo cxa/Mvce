@@ -28,7 +28,7 @@ class ViewController: NSViewController {
   }
 }
 
-extension ViewController: View, EventEmitter {
+extension ViewController: Mvce.View, Mvce.EventEmitter {
   typealias Model = ImageModel
   typealias Event = ImageEvent
 

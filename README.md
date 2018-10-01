@@ -37,7 +37,7 @@ enum CounterEvent {
 }
 
 // Controller to represent how to update model
-struct CounterController: Controller {
+struct CounterController: Mvce.Controller {
   typealias Model = CounterModel
   typealias Event = CounterEvent
 
@@ -83,7 +83,7 @@ final class ViewController: UIViewController {
 }
 
 // Adopt `View` protocol to bind model and event emitter.
-extension ViewController: View {
+extension ViewController: Mvce.View {
   typealias Model = CounterModel
   typealias Event = CounterEvent
 
@@ -129,7 +129,7 @@ Glue 'em all with `Mvce.glue(model:view:controller:)`, inject to `loadView` or `
 
 ### Cross-Platform (iOS & macOS)?
 
-Sure, that's *REAL* MVC's advantage! Model and Controller can be shared, only platform-independent view is required to rewrite.
+Sure, that's _REAL_ MVC's advantage! Model and Controller can be shared, only platform-independent view is required to rewrite.
 
 ```swift
 class ViewController: NSViewController {
@@ -143,7 +143,7 @@ class ViewController: NSViewController {
   }
 }
 
-extension ViewController: View {
+extension ViewController: Mvce.View {
   typealias Model = CounterModel
   typealias Event = CounterEvent
 
@@ -182,4 +182,4 @@ MIT
 
 - Blog: [realazy.com](https://realazy.com) (Chinese)
 - Github: [@cxa](https://github.com/cxa)
-- Twitter: [@_cxa](https://twitter.com/_cxa) (Chinese mainly)
+- Twitter: [@\_cxa](https://twitter.com/_cxa) (Chinese mainly)

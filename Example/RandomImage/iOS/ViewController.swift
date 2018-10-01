@@ -27,7 +27,7 @@ class ViewController: UIViewController {
   }
 }
 
-extension ViewController: View {
+extension ViewController: Mvce.View {
   typealias Model = ImageModel
   typealias Event = ImageEvent
 

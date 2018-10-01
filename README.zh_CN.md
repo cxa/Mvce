@@ -37,7 +37,7 @@ enum CounterEvent {
 }
 
 // 处理不同的事件，更新模型的控制器
-struct CounterController: Controller {
+struct CounterController: Mvce.Controller {
   typealias Model = CounterModel
   typealias Event = CounterEvent
 
@@ -82,7 +82,7 @@ final class ViewController: UIViewController {
 }
 
 // 遵循 `View` 协议，绑定模型和事件发射器。
-extension ViewController: View {
+extension ViewController: Mvce.View {
   typealias Model = CounterModel
   typealias Event = CounterEvent
 
@@ -142,7 +142,7 @@ class ViewController: NSViewController {
   }
 }
 
-extension ViewController: View {
+extension ViewController: Mvce.View {
   typealias Model = CounterModel
   typealias Event = CounterEvent
 
@@ -181,4 +181,4 @@ MIT
 
 - Blog: [realazy.com](https://realazy.com)
 - Github: [@cxa](https://github.com/cxa)
-- Twitter: [@_cxa](https://twitter.com/_cxa)
+- Twitter: [@\_cxa](https://twitter.com/_cxa)

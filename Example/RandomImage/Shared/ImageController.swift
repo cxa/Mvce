@@ -19,7 +19,7 @@ class ImageController {
   private var downloadTask: URLSessionDataTask?
 }
 
-extension ImageController: Controller {
+extension ImageController: Mvce.Controller {
   typealias Model = ImageModel
   typealias Event = ImageEvent
 

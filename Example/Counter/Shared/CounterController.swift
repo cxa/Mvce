@@ -14,7 +14,7 @@ enum CounterEvent {
   case decrement
 }
 
-struct CounterController: Controller {
+struct CounterController: Mvce.Controller {
   typealias Model = CounterModel
   typealias Event = CounterEvent
 

@@ -31,13 +31,13 @@ public extension Model where Self: NSObject {
   }
 }
 
-public protocol EventEmitter {
+public protocol _EventEmitter {
   associatedtype Event
 
   func emit(event: Event)
 }
 
-private extension EventEmitter where Self: AnyObject {
+private extension _EventEmitter where Self: AnyObject {
   typealias Emitter = (Event) -> Void
 
   var emitter: Emitter {
@@ -52,13 +52,13 @@ private extension EventEmitter where Self: AnyObject {
   }
 }
 
-public extension EventEmitter where Self: AnyObject {
+public extension _EventEmitter where Self: AnyObject {
   func emit(event: Event) {
     emitter(event)
   }
 }
 
-public protocol Controller {
+public protocol _Controller {
   associatedtype Model
   associatedtype Event
   typealias Emitter = (Event) -> Void
@@ -68,7 +68,7 @@ public protocol Controller {
 
 public typealias Invalidator = () -> Void
 
-public protocol View {
+public protocol _View {
   associatedtype Model
   associatedtype Event
   typealias Emitter = (Event) -> Void
@@ -78,6 +78,10 @@ public protocol View {
 }
 
 public struct Mvce {
+  public typealias Controller = _Controller
+  public typealias EventEmitter = _EventEmitter
+  public typealias View = _View
+
   private static func _glue<V: View & AnyObject, C: Controller, Model, Event>
     (model: Model, view: V, controller: C) -> EventLoop<Model, Event>
     where
@@ -147,7 +151,7 @@ private class EventLoop<Model, Event> {
   let invaldateBinding: Invalidator
   var obsever: NSObjectProtocol?
 
-  init<V: View, C: Controller>(model: Model, view: V, controller: C)
+  init<V: _View, C: _Controller>(model: Model, view: V, controller: C)
     where V.Model == Model, V.Event == Event,
           C.Model == Model, C.Event == Event
   {

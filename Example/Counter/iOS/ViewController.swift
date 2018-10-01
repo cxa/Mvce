@@ -20,7 +20,7 @@ final class ViewController: UIViewController {
   }
 }
 
-extension ViewController: View {
+extension ViewController: Mvce.View {
   typealias Model = CounterModel
   typealias Event = CounterEvent
 

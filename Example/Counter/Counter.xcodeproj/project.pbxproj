@@ -218,6 +218,7 @@
 					};
 					E051C01B20D81AEC005CDE37 = {
 						CreatedOnToolsVersion = 9.4;
+						LastSwiftMigration = 1000;
 					};
 				};
 			};
@@ -514,7 +515,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.realazy.Counter-macOS";
 				PRODUCT_NAME = Counter;
 				SDKROOT = macosx;
-				SWIFT_VERSION = 4.0;
+				SWIFT_VERSION = 4.2;
 			};
 			name = Debug;
 		};
@@ -535,7 +536,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.realazy.Counter-macOS";
 				PRODUCT_NAME = Counter;
 				SDKROOT = macosx;
-				SWIFT_VERSION = 4.0;
+				SWIFT_VERSION = 4.2;
 			};
 			name = Release;
 		};
