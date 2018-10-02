@@ -18,11 +18,11 @@ enum SampleEvent {
   case decrement
 }
 
-struct SampleController: Controller {
+struct SampleController: Mvce.Controller {
   typealias Model = SampleModel
   typealias Event = SampleEvent
-  
-  func update(model: SampleModel, for event: SampleEvent) {
+
+  func update(model: SampleModel, for event: SampleEvent, eventEmitter: @escaping (SampleEvent) -> Void) {
     switch event {
     case .increment:
       model.counter += 1
@@ -32,7 +32,7 @@ struct SampleController: Controller {
   }
 }
 
-class SampleView: NSObject, EventEmitter, View {
+class SampleView: NSObject, Mvce.EventEmitter, Mvce.View {
   typealias Model = SampleModel
   typealias Event = SampleEvent
 
