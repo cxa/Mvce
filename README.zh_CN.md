@@ -87,7 +87,7 @@ extension ViewController: Mvce.View {
   typealias Event = CounterEvent
 
   func bind(model: CounterModel) -> Invalidator {
-    return Mvce.flatKVObservations([
+    return Mvce.batchInvalidate(observations: [
       model.bind(\.count, to: label, at: \.text) { String(format: "%d", $0) }
     ])
   }
@@ -116,7 +116,7 @@ public extension NSObjectProtocol where Self : NSObject {
 }
 ```
 
-一旦你返回一个 `() -> Void`（Mvce 另名为 `Invalidator`），Mvce 会帮你管理这些绑定的生命周期。Mvce 还可以帮你将多个绑定的 `NSKeyValueObservation` 平铺为一个`Invalidator`：`static func flatKVObservations(_ observations: [NSKeyValueObservation]) -> Invalidator`。
+一旦你返回一个 `() -> Void`（Mvce 另名为 `Invalidator`），Mvce 会帮你管理这些绑定的生命周期。Mvce 还可以帮你将多个绑定的 `NSKeyValueObservation` 平铺为一个`Invalidator`：`static func batchInvalidate(observations: [NSKeyValueObservation]) -> Invalidator`。
 
 ### 分离视图和控制器
 
@@ -147,7 +147,7 @@ extension ViewController: Mvce.View {
   typealias Event = CounterEvent
 
   func bind(model: CounterModel) -> Invalidator {
-    return Mvce.flatKVObservations([
+    return Mvce.batchInvalidate(observations: [
       model.bind(\.count, to: label, at: \.stringValue) { String(format: "%d", $0) }
     ])
   }

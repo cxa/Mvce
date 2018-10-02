@@ -25,7 +25,7 @@ extension ViewController: Mvce.View {
   typealias Event = CounterEvent
 
   func bind(model: CounterModel) -> Invalidator {
-    return Mvce.flatKVObservations([
+    return Mvce.batchInvalidate(observations: [
       model.bind(\.count, to: label, at: \.stringValue) { String(format: "%d", $0) }
     ])
   }

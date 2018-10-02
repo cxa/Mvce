@@ -32,7 +32,7 @@ extension ViewController: Mvce.View {
   typealias Event = ImageEvent
 
   func bind(model: ImageModel) -> Invalidator {
-    return Mvce.flatKVObservations([
+    return Mvce.batchInvalidate(observations: [
       model.bind(\.isImageHidden, to: imageView, at: \.isHidden),
       model.bind(\.isIndicatorHidden, to: indicatorView) {
         $0?.isHidden = $1

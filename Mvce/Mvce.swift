@@ -138,7 +138,7 @@ public struct Mvce {
     makeCompilerController.emitter = glue.emit(event:)
   }
 
-  static public func flatKVObservations(_ observations: [NSKeyValueObservation]) -> Invalidator {
+  static public func batchInvalidate(observations: [NSKeyValueObservation]) -> Invalidator {
     return {
       for o in observations { o.invalidate() }
     }

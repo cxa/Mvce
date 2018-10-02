@@ -88,7 +88,7 @@ extension ViewController: Mvce.View {
   typealias Event = CounterEvent
 
   func bind(model: CounterModel) -> Invalidator {
-    return Mvce.flatKVObservations([
+    return Mvce.batchInvalidate(observations: [
       model.bind(\.count, to: label, at: \.text) { String(format: "%d", $0) }
     ])
   }
@@ -117,7 +117,7 @@ public extension NSObjectProtocol where Self : NSObject {
 }
 ```
 
-Mvce manages the observation lifetime, once you return an invalidation closure `() -> Void` which Mvce typealias to `Invalidator`. Mvce also provides `static func flatKVObservations(_ observations: [NSKeyValueObservation]) -> Invalidator` to flat multiple observations to an `Invalidator`.
+Mvce manages the observation lifetime, once you return an invalidation closure `() -> Void` which Mvce typealias to `Invalidator`. Mvce also provides `static func batchInvalidate(observations: [NSKeyValueObservation]) -> Invalidator` to flat multiple observations to an `Invalidator`.
 
 ### Decouple View and Controller
 
@@ -148,7 +148,7 @@ extension ViewController: Mvce.View {
   typealias Event = CounterEvent
 
   func bind(model: CounterModel) -> Invalidator {
-    return Mvce.flatKVObservations([
+    return Mvce.batchInvalidate(observations: [
       model.bind(\.count, to: label, at: \.stringValue) { String(format: "%d", $0) }
     ])
   }
