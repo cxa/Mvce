@@ -31,7 +31,7 @@ extension ViewController: Mvce.View {
   typealias Model = ImageModel
   typealias Event = ImageEvent
 
-  func bind(model: ImageModel) -> Invalidator {
+  func bind(model: Model) -> Invalidator {
     return Mvce.batchInvalidate(observations: [
       model.bind(\.isImageHidden, to: imageView, at: \.isHidden),
       model.bind(\.isIndicatorHidden, to: indicatorView) {
@@ -47,8 +47,8 @@ extension ViewController: Mvce.View {
    ])
   }
 
-  func bind(eventEmitter: @escaping (ImageEvent) -> Void) {
-    let action = ButtonAction(emit: eventEmitter)
+  func bind(emitter: Mvce.EventEmitter<Event>) {
+    let action = ButtonAction(emit: emitter.emit)
     downloadButton.addTarget(action, action: #selector(action.handleDownload(_:)), for: .touchUpInside)
     // Need to retain target
     let key: StaticString = #function

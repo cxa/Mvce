@@ -28,11 +28,11 @@ class ViewController: NSViewController {
   }
 }
 
-extension ViewController: Mvce.View, Mvce.EventEmitter {
+extension ViewController: Mvce.View {
   typealias Model = ImageModel
   typealias Event = ImageEvent
 
-  func bind(model: ImageModel) -> Invalidator {
+  func bind(model: Model) -> Invalidator {
     return Mvce.batchInvalidate(observations: [
       model.bind(\.isImageHidden, to: imageView, at: \.isHidden),
       model.bind(\.isIndicatorHidden, to: progresslessIndicator) {
@@ -48,8 +48,8 @@ extension ViewController: Mvce.View, Mvce.EventEmitter {
     ])
   }
 
-  func bind(eventEmitter: @escaping (ImageEvent) -> Void) {
-    let action = ButtonAction(emit: eventEmitter)
+  func bind(emitter: Mvce.EventEmitter<Event>) {
+    let action = ButtonAction(emit: emitter.emit)
     downloadButton.target = action
     downloadButton.action = #selector(action.handleDownload(_:))
     // Need to retain target

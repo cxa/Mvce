@@ -41,7 +41,7 @@ struct CounterController: Mvce.Controller {
   typealias Model = CounterModel
   typealias Event = CounterEvent
 
-  func update(model: CounterModel, for event: CounterEvent, eventEmitter: @escaping (Event) -> Void) {
+  func update(model: Model, for event: Event, emitter: Mvce.EventEmitter<Event>) {
     switch event {
     case .increment:
       model.count += 1
@@ -87,14 +87,14 @@ extension ViewController: Mvce.View {
   typealias Model = CounterModel
   typealias Event = CounterEvent
 
-  func bind(model: CounterModel) -> Invalidator {
+  func bind(model: Model) -> Invalidator {
     return Mvce.batchInvalidate(observations: [
       model.bind(\.count, to: label, at: \.text) { String(format: "%d", $0) }
     ])
   }
 
-  func bind(eventEmitter: @escaping (CounterEvent) -> Void) {
-    let action = ButtonAction(emit: eventEmitter)
+  func bind(emitter: Mvce.EventEmitter<Event>) {
+    let action = ButtonAction(emit: emitter.emit)
     incrButton.addTarget(action, action: #selector(action.incr(_:)), for: .touchUpInside)
     decrButton.addTarget(action, action: #selector(action.decr(_:)), for: .touchUpInside)
     // Hack to retain target
@@ -109,15 +109,18 @@ extension ViewController: Mvce.View {
 Take a careful look at our `ViewController`, there's no any reference to model! Just adopt `View` protocol and bind model's count to label inside `func bind(model:) -> Invalidator`. Mvce provides some wrapper for `func observe<Value>(_ keyPath: KeyPath<Self, Value>, options: NSKeyValueObservingOptions = default, changeHandler: @escaping (Self, NSKeyValueObservedChange<Value>) -> Void) -> NSKeyValueObservation`, KVO has never been such easier.
 
 ```swift
-public extension NSObjectProtocol where Self : NSObject {
-  func bind<V, V2, T>(_ keyPath: KeyPath<Self, V>, transform: @escaping (V) -> V2, to target: T, using binder: @escaping (T, V2) -> Void) -> NSKeyValueObservation
-  func bind<V, T>(_ keyPath: KeyPath<Self, V>, to target: T, using binder: @escaping (T, V) -> Void) -> NSKeyValueObservation
-  func bind<V, T, U>(_ keyPath: KeyPath<Self, V>, to target: T, at targetKeyPath: ReferenceWritableKeyPath<T, U>, transform: @escaping (V) -> U) -> NSKeyValueObservation
-  func bind<V, T>(_ keyPath: KeyPath<Self, V>, to target: T, at targetKeyPath: ReferenceWritableKeyPath<T, V>) -> NSKeyValueObservation
+extension NSObjectProtocol where Self : NSObject {
+    public func bind<V, V2, T>(_ keyPath: KeyPath<Self, V>, skipsInitial: Bool = default, transform: @escaping (V) -> V2, to target: T, using binder: @escaping (T, V2) -> Void) -> NSKeyValueObservation
+
+    public func bind<V, T>(_ keyPath: KeyPath<Self, V>, skipsInitial: Bool = default, to target: T, using binder: @escaping (T, V) -> Void) -> NSKeyValueObservation
+
+    public func bind<V, T, U>(_ keyPath: KeyPath<Self, V>, skipsInitial: Bool = default, to target: T, at targetKeyPath: ReferenceWritableKeyPath<T, U>, transform: @escaping (V) -> U) -> NSKeyValueObservation
+
+    public func bind<V, T>(_ keyPath: KeyPath<Self, V>, skipsInitial: Bool = default, to target: T, at targetKeyPath: ReferenceWritableKeyPath<T, V>) -> NSKeyValueObservation
 }
 ```
 
-Mvce manages the observation lifetime, once you return an invalidation closure `() -> Void` which Mvce typealias to `Invalidator`. Mvce also provides `static func batchInvalidate(observations: [NSKeyValueObservation]) -> Invalidator` to flat multiple observations to an `Invalidator`.
+Mvce manages the observation lifetime, once you return an invalidation closure `() -> Void` which Mvce type-alias to `Invalidator`. Mvce also provides `static func batchInvalidate(observations: [NSKeyValueObservation]) -> Invalidator` to flat multiple observations to an `Invalidator`.
 
 ### Decouple View and Controller
 
@@ -147,19 +150,19 @@ extension ViewController: Mvce.View {
   typealias Model = CounterModel
   typealias Event = CounterEvent
 
-  func bind(model: CounterModel) -> Invalidator {
+  func bind(model: Model) -> Invalidator {
     return Mvce.batchInvalidate(observations: [
       model.bind(\.count, to: label, at: \.stringValue) { String(format: "%d", $0) }
     ])
   }
 
-  func bind(eventEmitter: @escaping (CounterEvent) -> Void) {
-    let action = ButtonAction(emit: eventEmitter)
+  func bind(emitter: Mvce.EventEmitter<Event>) {
+    let action = ButtonAction(emit: emitter.emit)
     incrButton.target = action
     incrButton.action = #selector(action.incr(_:))
     decrButton.target = action
     decrButton.action = #selector(action.decr(_:))
-    // hack to retain target
+    // Need to retain target
     let key: StaticString = #function
     objc_setAssociatedObject(self, key.utf8Start, action, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
   }

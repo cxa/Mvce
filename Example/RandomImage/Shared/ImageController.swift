@@ -23,13 +23,13 @@ extension ImageController: Mvce.Controller {
   typealias Model = ImageModel
   typealias Event = ImageEvent
 
-  func update(model: ImageModel, for event: ImageEvent, eventEmitter: @escaping (ImageEvent) -> Void) {
+  func update(model: Model, for event: Event, emitter: Mvce.EventEmitter<Event>) {
     switch event {
     case .handleDownload:
-      let next: ImageEvent
+      let next: Event
       if case .downloading(_) = model.imageState { next = .cancelRequest }
       else { next = .requestImage }
-      eventEmitter(next)
+      emitter.emit(event: next)
     case .requestImage:
       model.imageState = .downloading(.undetermined)
       downloadTask = downloadImage(model: model)

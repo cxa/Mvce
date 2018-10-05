@@ -24,14 +24,14 @@ extension ViewController: Mvce.View {
   typealias Model = CounterModel
   typealias Event = CounterEvent
 
-  func bind(model: CounterModel) -> Invalidator {
+  func bind(model: Model) -> Invalidator {
     return Mvce.batchInvalidate(observations: [
       model.bind(\CounterModel.count, to: label, at: \UILabel.text) { String(format: "%d", $0) }
     ])
   }
 
-  func bind(eventEmitter: @escaping (CounterEvent) -> Void) {
-    let action = ButtonAction(emit: eventEmitter)
+  func bind(emitter: Mvce.EventEmitter<Event>) {
+    let action = ButtonAction(emit: emitter.emit)
     incrButton.addTarget(action, action: #selector(action.incr(_:)), for: .touchUpInside)
     decrButton.addTarget(action, action: #selector(action.decr(_:)), for: .touchUpInside)
     // Need to retain target

@@ -18,7 +18,7 @@ struct CounterController: Mvce.Controller {
   typealias Model = CounterModel
   typealias Event = CounterEvent
 
-  func update(model: CounterModel, for event: CounterEvent, eventEmitter: @escaping (Event) -> Void) {
+  func update(model: Model, for event: Event, emitter: Mvce.EventEmitter<Event>) {
     switch event {
     case .increment:
       model.count += 1
