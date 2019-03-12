@@ -8,6 +8,8 @@
 
 import UIKit
 import Mvce
+import ReactiveSwift
+import ReactiveCocoa
 
 class ViewController: UIViewController {
   @IBOutlet weak var indicatorView: UIActivityIndicatorView!
@@ -27,31 +29,23 @@ class ViewController: UIViewController {
   }
 }
 
-extension ViewController: Mvce.View {
+extension ViewController: View {
   typealias Model = ImageModel
   typealias Event = ImageEvent
 
-  func bind(model: Model) -> Invalidator {
-    return Mvce.batchInvalidate(observations: [
-      model.bind(\.isImageHidden, to: imageView, at: \.isHidden),
-      model.bind(\.isIndicatorHidden, to: indicatorView) {
-        $0?.isHidden = $1
-        if $1 { $0?.stopAnimating() }
-        else { $0?.startAnimating() }
-      },
-      model.bind(\.isProgressHidden, to: progressBar, at: \.isHidden),
-      model.bind(\.downloadProgress, to: progressBar, at: \.progress),
-      model.bind(\.downloadedImage, to: imageView, at: \.image),
-      model.bind(\.downloadError, to: self) { (s, e) in e.map { s.alert(error: $0) } },
-      model.bind(\.downloadTitle, to: downloadButton){ $0.setTitle($1, for: .normal) },
-   ])
-  }
+  func bind(model: Model, dispatcher: Dispatcher<Event>) -> View.BindingDisposer {
+    // model binding
+    imageView.reactive.isHidden <~ model.isImageHidden.skipRepeats()
+    imageView.reactive.image <~ model.downloadedImage.skipRepeats()
+    indicatorView.reactive.isHidden <~ model.isIndicatorHidden.skipRepeats()
+    progressBar.reactive.isHidden <~ model.isProgressHidden.skipRepeats()
+    progressBar.reactive.progress <~ model.downloadProgress.skipRepeats()
+    downloadButton.reactive.title(for: .normal) <~ model.downloadButtonTitle.skipRepeats()
+    let disposer = CompositeDisposable()
+    disposer += model.downloadError.skipNil().observe(on: UIScheduler()).observeValues { [weak self] in self?.alert(error: $0) }
 
-  func bind(emitter: Mvce.EventEmitter<Event>) {
-    let action = ButtonAction(emit: emitter.emit)
-    downloadButton.addTarget(action, action: #selector(action.handleDownload(_:)), for: .touchUpInside)
-    // Need to retain target
-    let key: StaticString = #function
-    objc_setAssociatedObject(self, key.utf8Start, action, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+    // event binding
+    disposer += downloadButton.reactive.controlEvents(.primaryActionTriggered).observeValues { _ in dispatcher.send(event: .handleDownload) }
+    return disposer.dispose
   }
 }

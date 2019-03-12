@@ -20,22 +20,17 @@ final class ViewController: UIViewController {
   }
 }
 
-extension ViewController: Mvce.View {
+extension ViewController: View {
   typealias Model = CounterModel
   typealias Event = CounterEvent
 
-  func bind(model: Model) -> Invalidator {
-    return Mvce.batchInvalidate(observations: [
-      model.bind(\CounterModel.count, to: label, at: \UILabel.text) { String(format: "%d", $0) }
-    ])
-  }
-
-  func bind(emitter: Mvce.EventEmitter<Event>) {
-    let action = ButtonAction(emit: emitter.emit)
+  func bind(model: Model, dispatcher: Dispatcher<Event>) -> View.BindingDisposer {
+    let observation = model.bind(\CounterModel.count, to: label, at: \UILabel.text) { String(format: "%d", $0) }
+    let action = ButtonAction(sendEvent: dispatcher.send(event:))
     incrButton.addTarget(action, action: #selector(action.incr(_:)), for: .touchUpInside)
     decrButton.addTarget(action, action: #selector(action.decr(_:)), for: .touchUpInside)
-    // Need to retain target
     let key: StaticString = #function
-    objc_setAssociatedObject(self, key.utf8Start, action, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+    objc_setAssociatedObject(self, key.utf8Start, action, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) // Need to retain target
+    return observation.invalidate
   }
 }

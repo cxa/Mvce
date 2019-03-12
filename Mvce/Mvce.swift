@@ -8,48 +8,25 @@
 
 import Foundation
 
-public typealias Model = NSObjectProtocol
-
-public extension Model where Self: NSObject {
-  func bind<V, V2, T>(_ keyPath: KeyPath<Self, V>, skipsInitial: Bool = false, transform: @escaping (V) -> V2, to target: T, using binder: @escaping (T, V2) -> Void) -> NSKeyValueObservation {
-    return observe(keyPath, options: skipsInitial ? [.new] : [.initial, .new]) { (_, change) in
-      guard let nv = change.newValue else { return }
-      DispatchQueue.main.async { binder(target, transform(nv)) }
-    }
-  }
-
-  func bind<V, T>(_ keyPath: KeyPath<Self, V>, skipsInitial: Bool = false, to target: T, using binder: @escaping (T, V) -> Void) -> NSKeyValueObservation {
-    return bind(keyPath, skipsInitial: skipsInitial, transform: {$0}, to: target, using: binder)
-  }
-
-  func bind<V, T, U>(_ keyPath: KeyPath<Self, V>, skipsInitial: Bool = false, to target: T, at targetKeyPath: ReferenceWritableKeyPath<T, U>, transform: @escaping (V) -> U) -> NSKeyValueObservation {
-    return bind(keyPath, skipsInitial: skipsInitial, to: target) { (t, v) in t[keyPath: targetKeyPath] = transform(v) }
-  }
-
-  func bind<V, T>(_ keyPath: KeyPath<Self, V>, skipsInitial: Bool = false, to target: T, at targetKeyPath: ReferenceWritableKeyPath<T, V>) -> NSKeyValueObservation {
-    return bind(keyPath, skipsInitial: skipsInitial, to: target) { (t, v) in t[keyPath: targetKeyPath] = v }
-  }
-}
-
-public protocol MvceEventEmitable {
+public protocol Dispatchable {
   associatedtype Event
 
-  func emit(event: Event)
+  func send(event: Event)
 }
 
-private extension MvceEventEmitable where Self: AnyObject {
-  typealias Emit = (Event) -> Void
+private extension Dispatchable where Self: AnyObject {
+  typealias SendEvent = (Event) -> Void
 
-  var _mvce_emit: Emit? {
+  var _mvce_sendEvent: SendEvent? {
     get {
       let key: StaticString = #function
-      return objc_getAssociatedObject(self, key.utf8Start) as? Emit
+      return objc_getAssociatedObject(self, key.utf8Start) as? SendEvent
     }
     set {
       let key: StaticString = #function
       objc_setAssociatedObject(self, key.utf8Start, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
-      if let emit = newValue, _mvce_eventsBeforeGlue.count > 0 {
-        _mvce_eventsBeforeGlue.forEach { emit(($0 as! Box<Event>).value) }
+      if let sendEvent = newValue, _mvce_eventsBeforeGlue.count > 0 {
+        _mvce_eventsBeforeGlue.forEach { sendEvent(($0 as! Box<Event>).value) }
         _mvce_eventsBeforeGlue.removeAllObjects()
       }
     }
@@ -67,60 +44,39 @@ private extension MvceEventEmitable where Self: AnyObject {
   }
 }
 
-public extension MvceEventEmitable where Self: AnyObject {
-  func emit(event: Event) {
-    if let emit = _mvce_emit {
-      emit(event)
-    } else {
-      _mvce_eventsBeforeGlue.add(Box(event))
-    }
+public extension Dispatchable where Self: AnyObject {
+  func send(event: Event) {
+    if let sendEvent = _mvce_sendEvent { sendEvent(event) }
+    else { _mvce_eventsBeforeGlue.add(Box(event)) }
   }
 }
 
-public struct MvceEventEmitter<E>: MvceEventEmitable {
+public struct Dispatcher<E>: Dispatchable {
   public typealias Event = E
-  typealias Emit = (Event) -> Void
+  typealias SendEvent = (Event) -> Void
 
-  private let emit: Emit
-
-  init(emit: @escaping Emit) {
-    self.emit = emit
-  }
-
-  public func emit(event: E) {
-    emit(event)
-  }
+  private let sendEvent: SendEvent
+  init(sendEvent: @escaping SendEvent) { self.sendEvent = sendEvent }
+  public func send(event: Event) { sendEvent(event) }
 }
 
-public protocol MvceController {
+public protocol Controller {
   associatedtype Model
   associatedtype Event
 
-  func update(model: Model, for event: Event, emitter: MvceEventEmitter<Event>) -> Void
+  func update(model: Model, for event: Event, dispatcher: Dispatcher<Event>) -> Void
 }
 
-public typealias Invalidator = () -> Void
-
-public protocol MvceView {
+public protocol View {
   associatedtype Model
   associatedtype Event
+  typealias BindingDisposer = () -> Void
 
-  func bind(model: Model) -> Invalidator
-  func bind(emitter: MvceEventEmitter<Event>) -> Void
-}
-
-public extension MvceView {
-  func bind(emitter: MvceEventEmitter<Event>) -> Void {}
+  func bind(model: Model, dispatcher: Dispatcher<Event>) -> BindingDisposer
 }
 
 public struct Mvce {
-  public typealias Controller = MvceController
-  public typealias EventEmitable = MvceEventEmitable
-  public typealias EventEmitter = MvceEventEmitter
-  public typealias View = MvceView
-
-  private static func _glue<V: View & AnyObject, C: Controller, Model, Event>
-    (model: Model, view: V, controller: C) -> EventLoop<Model, Event>
+  private static func _glue<V: View & AnyObject, C: Controller, Model, Event>(model: Model, view: V, controller: C) -> EventLoop<Model, Event>
     where
     V.Model == Model, V.Event == Event,
     C.Model == Model, C.Event == Event
@@ -131,8 +87,7 @@ public struct Mvce {
     return loop
   }
 
-  static public func glue<V: View & AnyObject, C: Controller, Model, Event>
-    (model: Model, view: V, controller: C)
+  static public func glue<V: View & AnyObject, C: Controller, Model, Event>(model: Model, view: V, controller: C)
     where
     V.Model == Model, V.Event == Event,
     C.Model == Model, C.Event == Event
@@ -140,85 +95,65 @@ public struct Mvce {
     let _ = _glue(model: model, view: view, controller: controller)
   }
 
-  static public func glue<V: View & AnyObject & EventEmitable, C: Controller, Model, Event>
-    (model: Model, view: V, controller: C)
+  static public func glue<V: View & AnyObject & Dispatchable, C: Controller, Model, Event>(model: Model, view: V, controller: C)
     where
     V.Model == Model, V.Event == Event,
     C.Model == Model, C.Event == Event
   {
-    let glue = _glue(model: model, view: view, controller: controller)
-    var makeCompilerHappyView = view
-    makeCompilerHappyView._mvce_emit = glue.emit(event:)
+    let loop = _glue(model: model, view: view, controller: controller)
+    var v = view
+    v._mvce_sendEvent = loop.sendEvent
   }
 
-  static public func glue<V: View & AnyObject, C: Controller & AnyObject & EventEmitable, Model, Event>
-    (model: Model, view: V, controller: C)
+  static public func glue<V: View & AnyObject, C: Controller & AnyObject & Dispatchable, Model, Event>(model: Model, view: V, controller: C)
     where
     V.Model == Model, V.Event == Event,
     C.Model == Model, C.Event == Event
   {
-    let glue = _glue(model: model, view: view, controller: controller)
-    var makeCompilerController = controller
-    makeCompilerController._mvce_emit = glue.emit(event:)
+    let loop = _glue(model: model, view: view, controller: controller)
+    var c = controller
+    c._mvce_sendEvent = loop.sendEvent
   }
 
-  static public func glue<V: View & AnyObject & EventEmitable, C: Controller & AnyObject & EventEmitable, Model, Event>
-    (model: Model, view: V, controller: C)
+  static public func glue<V: View & AnyObject & Dispatchable, C: Controller & AnyObject & Dispatchable, Model, Event>(model: Model, view: V, controller: C)
     where
     V.Model == Model, V.Event == Event,
     C.Model == Model, C.Event == Event
   {
-    let glue = _glue(model: model, view: view, controller: controller)
-    var makeCompilerHappyView = view
-    makeCompilerHappyView._mvce_emit = glue.emit(event:)
-    var makeCompilerController = controller
-    makeCompilerController._mvce_emit = glue.emit(event:)
-  }
-
-  static public func batchInvalidate(observations: [NSKeyValueObservation]) -> Invalidator {
-    return {
-      for o in observations { o.invalidate() }
-    }
+    let loop = _glue(model: model, view: view, controller: controller)
+    var v = view
+    var c = controller
+    v._mvce_sendEvent = loop.sendEvent
+    c._mvce_sendEvent = loop.sendEvent
   }
 }
 
 private class EventLoop<Model, Event> {
-  let model: Model
-  let notiName = Notification.Name(UUID.init().uuidString)
-  let invaldateBinding: Invalidator
-  var emitter: MvceEventEmitter<Event>!
-  var obsever: NSObjectProtocol!
+  let dispose: View.BindingDisposer
+  let obsever: NSObjectProtocol
+  let sendEvent: Dispatcher<Event>.SendEvent
 
-  init<V: MvceView, C: MvceController>(model: Model, view: V, controller: C)
+  init<V: View, C: Controller>(model: Model, view: V, controller: C)
     where V.Model == Model, V.Event == Event,
           C.Model == Model, C.Event == Event
   {
-    self.model = model
-    invaldateBinding = view.bind(model: model)
-    emitter = MvceEventEmitter(emit: emit(event:))
-    view.bind(emitter: emitter)
-    obsever = NotificationCenter.default.addObserver(forName: notiName, object: nil, queue: nil) { [weak self] notification in
-      guard
-        let emitter = self?.emitter,
-        let model = self?.model,
-        let event = notification.object as? Box<Event>
-      else { return }
-      controller.update(model: model, for: event.value, emitter: emitter)
+    let notiName = Notification.Name(UUID.init().uuidString)
+    sendEvent = { event in NotificationCenter.default.post(name: notiName, object: Box(event)) }
+    let dispatcher = Dispatcher(sendEvent: sendEvent)
+    dispose = view.bind(model: model, dispatcher: dispatcher)
+    obsever = NotificationCenter.default.addObserver(forName: notiName, object: nil, queue: nil) { notification in
+      guard let event = notification.object as? Box<Event> else { return }
+      controller.update(model: model, for: event.value, dispatcher: dispatcher)
     }
   }
 
   deinit {
-    obsever.map(NotificationCenter.default.removeObserver)
-    invaldateBinding()
-  }
-
-  func emit(event: Event) {
-    NotificationCenter.default.post(name: notiName, object: Box(event))
+    NotificationCenter.default.removeObserver(obsever)
+    dispose()
   }
 }
 
 private class Box<T> {
   let value: T
-
   init(_ value: T) { self.value = value }
 }

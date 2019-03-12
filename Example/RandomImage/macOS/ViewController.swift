@@ -8,6 +8,9 @@
 
 import Cocoa
 import Mvce
+import Result
+import ReactiveSwift
+import ReactiveCocoa
 
 class ViewController: NSViewController {
   @IBOutlet weak var timerLabel: NSTextField!
@@ -28,32 +31,35 @@ class ViewController: NSViewController {
   }
 }
 
-extension ViewController: Mvce.View {
+extension ViewController: View {
   typealias Model = ImageModel
   typealias Event = ImageEvent
 
-  func bind(model: Model) -> Invalidator {
-    return Mvce.batchInvalidate(observations: [
-      model.bind(\.isImageHidden, to: imageView, at: \.isHidden),
-      model.bind(\.isIndicatorHidden, to: progresslessIndicator) {
-        $0?.isHidden = $1
-        if $1 { $0?.stopAnimation(nil) }
-        else { $0?.startAnimation(nil) }
-      },
-      model.bind(\.isProgressHidden, to: progressIndicator, at: \.isHidden),
-      model.bind(\.downloadProgress, to: progressIndicator, at: \.doubleValue) { Double($0) * 100 },
-      model.bind(\.downloadedImage, to: imageView, at: \.image),
-      model.bind(\.downloadError, to: self) { (s, e) in e.map { s.alert(error: $0) } },
-      model.bind(\.downloadTitle, to: downloadButton, at: \.title),
-    ])
-  }
+  func bind(model: ImageModel, dispatcher: Dispatcher<ImageEvent>) -> View.BindingDisposer {
+    // model binding
+    imageView.reactive.isHidden <~ model.isImageHidden.skipRepeats()
+    imageView.reactive.image <~ model.downloadedImage.skipRepeats()
 
-  func bind(emitter: Mvce.EventEmitter<Event>) {
-    let action = ButtonAction(emit: emitter.emit)
-    downloadButton.target = action
-    downloadButton.action = #selector(action.handleDownload(_:))
-    // Need to retain target
-    let key: StaticString = #function
-    objc_setAssociatedObject(self, key.utf8Start, action, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+    progresslessIndicator.reactive.isHidden <~ model.isIndicatorHidden.skipRepeats()
+    progressIndicator.reactive.isHidden <~ model.isProgressHidden.skipRepeats()
+    progressIndicator.reactive.makeBindingTarget { $0.doubleValue = Double($1) * 100 } <~ model.downloadProgress.skipRepeats()
+    downloadButton.reactive.stringValue <~ model.downloadButtonTitle.skipRepeats()
+    let disposer = CompositeDisposable()
+    disposer += model.isIndicatorHidden.producer.observe(on: UIScheduler()).startWithValues { [weak self] in
+      if $0 { self?.progresslessIndicator.stopAnimation(nil) }
+      else { self?.progresslessIndicator.startAnimation(nil) }
+    }
+    disposer += model.downloadError.skipNil().observe(on: UIScheduler()).observeValues { [weak self] in self?.alert(error: $0) }
+
+    // event binding
+    // ReactiveCocoa doesn't exposed `proxy.ivoked`
+    let action = Action<(), (), NoError> { _ in
+      SignalProducer { observer, _ in
+        dispatcher.send(event: .handleDownload)
+        observer.sendCompleted()
+      }
+    }
+    downloadButton.reactive.pressed = CocoaAction(action)
+    return disposer.dispose
   }
 }

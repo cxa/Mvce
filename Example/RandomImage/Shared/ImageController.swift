@@ -19,24 +19,24 @@ class ImageController {
   private var downloadTask: URLSessionDataTask?
 }
 
-extension ImageController: Mvce.Controller {
+extension ImageController: Controller {
   typealias Model = ImageModel
   typealias Event = ImageEvent
 
-  func update(model: Model, for event: Event, emitter: Mvce.EventEmitter<Event>) {
+  func update(model: Model, for event: Event, dispatcher: Dispatcher<Event>) {
     switch event {
     case .handleDownload:
       let next: Event
-      if case .downloading(_) = model.imageState { next = .cancelRequest }
+      if case .downloading(_) = model.imageState.value { next = .cancelRequest }
       else { next = .requestImage }
-      emitter.emit(event: next)
+      dispatcher.send(event: next)
     case .requestImage:
-      model.imageState = .downloading(.undetermined)
+      model.imageState.value = .downloading(.undetermined)
       downloadTask = downloadImage(model: model)
       downloadTask?.resume()
     case .cancelRequest:
       downloadTask?.cancel()
-      model.imageState = .none
+      model.imageState.value = .none
     }
   }
 }
@@ -46,7 +46,7 @@ private extension ImageController {
     guard let url = URL(string: "https://picsum.photos/2000/1000/?random") else { // Download a large image to show progress
       let uinfo = [NSLocalizedDescriptionKey: NSLocalizedString("Image URL is wrong", comment: "")]
       let err = NSError(domain: "", code: 0, userInfo:uinfo)
-      model.imageState = .error(err)
+      model.imageState.value = .error(err)
       return nil
     }
     let session = URLSession(configuration: .default, delegate: DataTaskDelegate(model), delegateQueue: nil)
@@ -78,22 +78,22 @@ private class DataTaskDelegate: NSObject, URLSessionDataDelegate {
     imageData.append(data)
     if isDeterminated() {
       let fraction = Float(imageData.count) / Float(expectLen)
-      model.imageState = .downloading(.fractionCompleted(fraction))
+      model.imageState.value = .downloading(.fractionCompleted(fraction))
     }
   }
 
   func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
     session.invalidateAndCancel()
     if let err = error  {
-      if (err as NSError).code == NSURLErrorCancelled { return model.imageState = .none }
-      return model.imageState = .error(err)
+      if (err as NSError).code == NSURLErrorCancelled { return model.imageState.value = .none }
+      return model.imageState.value = .error(err)
     }
     guard let image = Image(data: imageData) else {
       let uinfo = [NSLocalizedDescriptionKey: NSLocalizedString("Can not convert data to Image", comment: "")]
       let err = NSError(domain: "", code: 0, userInfo:uinfo)
-      return model.imageState = .error(err)
+      return model.imageState.value = .error(err)
     }
 
-    model.imageState = .finished(image)
+    model.imageState.value = .finished(image)
   }
 }

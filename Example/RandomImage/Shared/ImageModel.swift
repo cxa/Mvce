@@ -8,49 +8,10 @@
 
 import Foundation
 import Mvce
+import Result
+import ReactiveSwift
 
-class ImageModel: NSObject {
-  @objc var isImageHidden: Bool {
-    if case .finished(_) = imageState { return false }
-    return true
-  }
-
-  @objc var isIndicatorHidden: Bool {
-    if case .downloading(.undetermined) = imageState { return false }
-    return true
-  }
-
-  @objc var isProgressHidden: Bool {
-    if case .downloading(.fractionCompleted(_)) = imageState { return false }
-    return true
-  }
-
-  @objc var downloadProgress: Float {
-    if case .downloading(.fractionCompleted(let p)) = imageState { return p }
-    return 0
-  }
-
-  @objc var downloadedImage: Image? {
-    if case .finished(let img) = imageState { return img }
-    return nil
-  }
-
-  @objc var downloadError: Error? {
-    if case .error(let err) = imageState { return err }
-    return nil
-  }
-
-  @objc var downloadTitle: String {
-    switch imageState {
-    case .downloading(_):
-      return NSLocalizedString("Stop", comment: "")
-    case .finished(_):
-      return NSLocalizedString("Download Another Image", comment: "")
-    default:
-      return NSLocalizedString("Download Image", comment: "")
-    }
-  }
-
+struct ImageModel {
   enum ImageState {
     enum Progress {
       case undetermined
@@ -63,22 +24,61 @@ class ImageModel: NSObject {
     case error(Error)
   }
 
-  var imageState: ImageState = .none {
-    willSet {
-      for key in ImageModel.keyPathsAffectedByImageState { willChangeValue(forKey: key._kvcKeyPathString!) }
+  let imageState = MutableProperty(ImageState.none)
+  let isImageHidden: Property<Bool>
+  let isIndicatorHidden: Property<Bool>
+  let isProgressHidden: Property<Bool>
+  let downloadProgress: Property<Float>
+  let downloadedImage: Property<Image?>
+  let downloadError: Signal<Error?, NoError>
+  let downloadButtonTitle: Property<String>
+
+  init() {
+    isImageHidden = imageState.map {
+      switch $0 {
+      case .finished(_): return false
+      default: return true
+      }
     }
-    didSet {
-      for key in ImageModel.keyPathsAffectedByImageState { didChangeValue(forKey: key._kvcKeyPathString!) }
+    isIndicatorHidden = imageState.map {
+      switch $0 {
+      case .downloading(.undetermined): return false
+      default: return true
+      }
+    }
+    isProgressHidden = imageState.map {
+      switch $0 {
+      case .downloading(.fractionCompleted(_)): return false
+      default: return true
+      }
+    }
+    downloadProgress = imageState.map {
+      switch $0 {
+      case .downloading(.fractionCompleted(let p)): return p
+      default: return 0
+      }
+    }
+    downloadedImage = imageState.map {
+      switch $0 {
+      case .finished(let image): return .some(image)
+      default: return nil
+      }
+    }
+    downloadError = imageState.signal.map {
+      switch $0 {
+      case .error(let err): return .some(err)
+      default: return nil
+      }
+    }
+    downloadButtonTitle = imageState.map {
+      switch $0 {
+      case .downloading(_):
+        return NSLocalizedString("Stop", comment: "")
+      case .finished(_):
+        return NSLocalizedString("Download Another Image", comment: "")
+      default:
+        return NSLocalizedString("Download Image", comment: "")
+      }
     }
   }
-
-  private static let keyPathsAffectedByImageState: [AnyKeyPath] = [
-    \ImageModel.isImageHidden,
-    \ImageModel.isIndicatorHidden,
-    \ImageModel.isProgressHidden,
-    \ImageModel.downloadProgress,
-    \ImageModel.downloadedImage,
-    \ImageModel.downloadError,
-    \ImageModel.downloadTitle
-  ]
 }

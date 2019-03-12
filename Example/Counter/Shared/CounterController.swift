@@ -14,11 +14,11 @@ enum CounterEvent {
   case decrement
 }
 
-struct CounterController: Mvce.Controller {
+struct CounterController: Controller {
   typealias Model = CounterModel
   typealias Event = CounterEvent
 
-  func update(model: Model, for event: Event, emitter: Mvce.EventEmitter<Event>) {
+  func update(model: Model, for event: Event, dispatcher: Dispatcher<Event>) {
     switch event {
     case .increment:
       model.count += 1

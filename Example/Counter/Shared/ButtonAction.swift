@@ -8,18 +8,18 @@
 
 import Foundation
 
-class ButtonAction: NSObject {
-  let emit: (CounterEvent) -> Void
+final class ButtonAction: NSObject {
+  let sendEvent: (CounterEvent) -> Void
 
-  init(emit: @escaping (CounterEvent) -> Void) {
-    self.emit = emit
+  init(sendEvent: @escaping (CounterEvent) -> Void) {
+    self.sendEvent = sendEvent
   }
 
   @objc func incr(_ sender: Any?) {
-    emit(.increment)
+    sendEvent(.increment)
   }
 
   @objc func decr(_ sender: Any?) {
-    emit(.decrement)
+    sendEvent(.decrement)
   }
 }

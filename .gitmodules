@@ -1,0 +1,4 @@
+[submodule "Example/RandomImage/ReactiveCocoa"]
+	path = Example/RandomImage/ReactiveCocoa
+	url = https://github.com/ReactiveCocoa/ReactiveCocoa.git
+	branch = 8.0.2
